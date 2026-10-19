@@ -1,4 +1,18 @@
 {
   "schemaVersion": 1,
-  "skills": []
+  "skills": [
+    {
+      "slug": "hub-skill-smoke-20261019",
+      "version": "0.0.1",
+      "displayName": "Skill Hub 链路测试",
+      "summary": "仅用于验证 MyCrew Skill Hub 投稿、展示和下载链路。",
+      "description": "无外部调用、无文件修改的测试 Skill。完成验收后可从社区目录移除。",
+      "publisherId": "145326144",
+      "publisher": "ganlingyao",
+      "sha256": "875a8a652a4ef40871f2afae08c98f9a30338fd181565c1e306c2bb5c76f3f81",
+      "bytes": 358,
+      "path": "packages/145326144/hub-skill-smoke-20261019/875a8a652a4ef40871f2afae08c98f9a30338fd181565c1e306c2bb5c76f3f81.zip",
+      "updatedAt": "2026-10-19T06:58:42.331Z"
+    }
+  ]
 }
