@@ -1,0 +1,52 @@
+name: Hub static validation
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  hub-validate:
+    name: hub-validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Validate catalog files without executing submitted code
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import path from 'node:path';
+          let files = 0;
+          let total = 0;
+          const walk = dir => {
+            for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+              if (entry.name === '.git') continue;
+              const file = path.join(dir, entry.name);
+              const stat = fs.lstatSync(file);
+              if (stat.isSymbolicLink()) throw new Error(`Symlink is forbidden: ${file}`);
+              if (stat.isDirectory()) { walk(file); continue; }
+              if (!stat.isFile()) throw new Error(`Unsupported file: ${file}`);
+              files++;
+              total += stat.size;
+              if (files > 5000 || total > 100 * 1024 * 1024) throw new Error('Repository size budget exceeded');
+              if (file.endsWith('.json')) {
+                if (stat.size > 1024 * 1024) throw new Error(`JSON too large: ${file}`);
+                JSON.parse(fs.readFileSync(file, 'utf8'));
+              }
+              if (file.endsWith('.zip')) {
+                if (stat.size < 22 || stat.size > 5 * 1024 * 1024) throw new Error(`ZIP size invalid: ${file}`);
+                const fd = fs.openSync(file, 'r');
+                const magic = Buffer.alloc(4);
+                try { fs.readSync(fd, magic, 0, 4, 0); } finally { fs.closeSync(fd); }
+                if (magic.toString('hex') !== '504b0304') throw new Error(`ZIP header invalid: ${file}`);
+              }
+            }
+          };
+          walk('.');
+          console.log(`Validated ${files} files without running package code`);
+          NODE
